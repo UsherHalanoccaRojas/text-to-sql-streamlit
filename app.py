@@ -164,7 +164,7 @@ def main():
         # Botón para borrar historial con un solo clic
         if st.button("Borrar historial", key="clear_history"):
             st.session_state.history = []
-            st.experimental_rerun()
+            st.rerun()
     
     st.caption("Proyecto educativo — valida siempre el SQL generado antes de usarlo en producción.")
 if __name__ == "__main__":
