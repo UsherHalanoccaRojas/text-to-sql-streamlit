@@ -33,7 +33,7 @@ Consulta SQL generada
 SQLite (ejecución solo-lectura) ──► Resultado en tabla (pandas)
 ```
 
-## 📦 Instalación
+## Instalación
 
 ```bash
 git clone https://github.com/UsherHalanoccaRojas/text-to-sql-streamlit.git
@@ -45,12 +45,6 @@ venv\\Scripts\\activate
 # Linux / macOS
 source venv/bin/activate
 pip install -r requirements.txt
-```
-
-## 🗃️ Crear la base de datos de ejemplo
-
-```bash
-python create_db.py
 ```
 
 ## ▶️ Ejecutar la aplicación

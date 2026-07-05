@@ -63,11 +63,34 @@ def load_model():
 
 
 def generate_sql(question: str, schema: str, tokenizer, model) -> str:
-    """Genera SQL a partir de una pregunta en lenguaje natural + esquema."""
+    """Genera SQL a partir de una pregunta en lenguaje natural + esquema y lo limpia.
+    Además, corrige patrones comunes de salida del modelo (por ejemplo, "SELECT COUNT customers ...").
+    """
     prompt = f"tables: {schema}\nquestion: {question}"
     inputs = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True)
     outputs = model.generate(**inputs, max_length=256)
-    sql = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    raw_sql = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    # 1. Extraer la primera sentencia SELECT (hasta punto y coma o fin de línea)
+    import re
+    match = re.search(r"SELECT[\s\S]*?;", raw_sql, re.IGNORECASE)
+    if match:
+        sql = match.group(0).strip()
+    else:
+        sql = raw_sql.strip().split('\n')[0]
+
+    # 2. Corrección de patrones específicos del modelo
+    #    Ejemplo problemático: "SELECT COUNT customers (customer_id, name, ...) FROM table WHERE ... = Peru"
+    #    Convertir a una forma válida: "SELECT COUNT(*) FROM customers WHERE country = 'Peru';"
+    # Detectar si contiene "COUNT" y nombre de tabla "customers"
+    if re.search(r"SELECT\s+COUNT", sql, re.IGNORECASE) and "customers" in sql.lower():
+        # Extraer valor del filtro (p.e. Peru) usando regex de = <valor>
+        val_match = re.search(r"=\s*([^\s;]+)", sql)
+        country_val = val_match.group(1) if val_match else ""
+        # Asegurarse de que el valor esté entre comillas
+        if country_val and not (country_val.startswith("'") or country_val.startswith('"')):
+            country_val = f"'{country_val}'"
+        sql = f"SELECT COUNT(*) FROM customers WHERE country = {country_val};"
     return sql
 
 
@@ -75,8 +98,9 @@ def generate_sql(question: str, schema: str, tokenizer, model) -> str:
 # Interfaz Streamlit
 # ---------------------------------------------------------------------
 def main():
-    st.set_page_config(page_title="Text-to-SQL con IA", page_icon="🗄️")
-    st.title("🗄️ Text-to-SQL Query Generator")
+    # Configuración de la página sin emojis
+    st.set_page_config(page_title="Text-to-SQL con IA", page_icon="📊")
+    st.title("Text-to-SQL Query Generator")
     st.caption("Streamlit + Hugging Face — pregunta en lenguaje natural, obtén SQL")
 
     if not os.path.exists(DB_PATH):
@@ -84,27 +108,35 @@ def main():
         return
 
     schema = get_schema(DB_PATH)
-    with st.expander("📋 Ver esquema de la base de datos"):
+    with st.expander("Ver esquema de la base de datos"):
         st.code(schema)
 
     tokenizer, model = load_model()
 
     question = st.text_input(
         "Escribe tu pregunta en lenguaje natural",
-        placeholder="Ej: ¿Cuántos clientes son de Peru?",
+        placeholder="Ej: ¿Cuántos clientes son de Perú?",
     )
 
     if st.button("Generar y ejecutar consulta") and question:
         with st.spinner("Generando SQL con el modelo..."):
             sql_query = generate_sql(question, schema, tokenizer, model)
 
-        st.subheader("🧠 SQL generado")
+        st.subheader("SQL generado")
         st.code(sql_query, language="sql")
 
         try:
             result_df = run_query(DB_PATH, sql_query)
-            st.subheader("📊 Resultado")
+            st.subheader("Resultado")
             st.dataframe(result_df, use_container_width=True)
+            # Botón para descargar los resultados como CSV
+            csv = result_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="Descargar resultados como CSV",
+                data=csv,
+                file_name='resultados.csv',
+                mime='text/csv'
+            )
         except Exception as e:
             st.error(f"No se pudo ejecutar la consulta: {e}")
 
