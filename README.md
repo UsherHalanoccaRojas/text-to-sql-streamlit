@@ -39,7 +39,11 @@ SQLite (ejecución solo-lectura) ──► Resultado en tabla (pandas)
 git clone https://github.com/UsherHalanoccaRojas/text-to-sql-streamlit.git
 cd text-to-sql-streamlit
 python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
+# Activar el entorno virtual
+# Windows
+venv\\Scripts\\activate
+# Linux / macOS
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
