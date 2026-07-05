@@ -47,7 +47,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## ▶️ Ejecutar la aplicación
+## Ejecutar la aplicación
 
 ```bash
 streamlit run app.py
@@ -55,7 +55,7 @@ streamlit run app.py
 
 Abre tu navegador en `http://localhost:8501`.
 
-## 🔍 Cómo funciona
+## Cómo funciona
 
 1. Se extrae automáticamente el **esquema** de la base de datos SQLite (tablas y columnas).
 2. La pregunta del usuario + el esquema se envían al modelo
@@ -65,7 +65,7 @@ Abre tu navegador en `http://localhost:8501`.
 4. Se ejecuta contra SQLite (bloqueando por seguridad cualquier sentencia que no sea `SELECT`).
 5. El resultado se muestra como tabla interactiva con `pandas` + `st.dataframe`.
 
-## ⚠️ Limitaciones y consideraciones de seguridad
+## Limitaciones y consideraciones de seguridad
 
 - Los modelos text-to-SQL pueden **alucinar** columnas o tablas que no existen; siempre se debe
   validar el SQL antes de ejecutarlo en un entorno productivo.
@@ -75,17 +75,17 @@ Abre tu navegador en `http://localhost:8501`.
 - El rendimiento del modelo depende del esquema: mientras más claros sean los nombres de tablas
   y columnas, mejores resultados se obtienen.
 
-## 🛠️ Stack
+## Stack
 
 - [Streamlit](https://streamlit.io/) — interfaz web
 - [Hugging Face Transformers](https://huggingface.co/docs/transformers) — modelo text-to-SQL
 - [SQLite](https://www.sqlite.org/) — base de datos de ejemplo
 - [pandas](https://pandas.pydata.org/) — manejo y visualización de resultados
 
-## 📄 Licencia
+## Licencia
 
 MIT — uso libre con fines educativos.
 
-## ✍️ Autor
+## Autor
 
 <TU NOMBRE> — Research Team Work N° 01, SQL AI Database Solutions

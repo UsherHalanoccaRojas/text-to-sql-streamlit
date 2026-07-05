@@ -161,8 +161,10 @@ def main():
                 st.code(entry['sql'], language="sql")
                 st.dataframe(entry['result'], use_container_width=True)
                 st.write("---")
-        if st.button("Borrar historial"):
+        # Botón para borrar historial con un solo clic
+        if st.button("Borrar historial", key="clear_history"):
             st.session_state.history = []
+            st.experimental_rerun()
     
     st.caption("Proyecto educativo — valida siempre el SQL generado antes de usarlo en producción.")
 if __name__ == "__main__":
