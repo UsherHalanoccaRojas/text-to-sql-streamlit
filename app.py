@@ -97,54 +97,73 @@ def generate_sql(question: str, schema: str, tokenizer, model) -> str:
 # ---------------------------------------------------------------------
 # Interfaz Streamlit
 # ---------------------------------------------------------------------
-def main():
-    # Configuración de la página sin emojis
-    st.set_page_config(page_title="Text-to-SQL con IA", page_icon="📊")
-    st.title("Text-to-SQL Query Generator")
-    st.caption("Streamlit + Hugging Face — pregunta en lenguaje natural, obtén SQL")
 
+
+
+def main():
+    # Configuración de la página (sin emojis en títulos)
+    st.set_page_config(page_title="Text-to-SQL con IA", page_icon=":gear:")
+    st.title("Text-to-SQL Query Generator")
+    st.caption("Streamlit + Hugging Face — escribe una pregunta y obtén SQL")
+    
     if not os.path.exists(DB_PATH):
         st.error("No se encontró la base de datos. Ejecuta primero `python create_db.py`.")
         return
-
+    
+    # Mostrar esquema de la base de datos
     schema = get_schema(DB_PATH)
     with st.expander("Ver esquema de la base de datos"):
         st.code(schema)
-
+    
+    # Cargar modelo (cacheado)
     tokenizer, model = load_model()
-
+    
+    # Entrada de pregunta
     question = st.text_input(
         "Escribe tu pregunta en lenguaje natural",
         placeholder="Ej: ¿Cuántos clientes son de Perú?",
     )
-
+    
     if st.button("Generar y ejecutar consulta") and question:
         with st.spinner("Generando SQL con el modelo..."):
             sql_query = generate_sql(question, schema, tokenizer, model)
-
         st.subheader("SQL generado")
         st.code(sql_query, language="sql")
-
         try:
             result_df = run_query(DB_PATH, sql_query)
             st.subheader("Resultado")
             st.dataframe(result_df, use_container_width=True)
-            # Botón para descargar los resultados como CSV
-            csv = result_df.to_csv(index=False).encode('utf-8')
+            # Botón para descargar resultados como CSV
+            csv_bytes = result_df.to_csv(index=False).encode("utf-8")
             st.download_button(
                 label="Descargar resultados como CSV",
-                data=csv,
-                file_name='resultados.csv',
-                mime='text/csv'
+                data=csv_bytes,
+                file_name="resultados.csv",
+                mime="text/csv",
             )
+            # Guardar en historial
+            if "history" not in st.session_state:
+                st.session_state.history = []
+            st.session_state.history.append({
+                "question": question,
+                "sql": sql_query,
+                "result": result_df,
+            })
         except Exception as e:
             st.error(f"No se pudo ejecutar la consulta: {e}")
-
+    
     st.divider()
-    st.caption(
-        "Proyecto educativo — valida siempre el SQL generado antes de usarlo en producción."
-    )
-
-
+    # Mostrar historial si existe
+    if st.session_state.get("history"):
+        with st.expander("Historial de consultas"):
+            for idx, entry in enumerate(st.session_state.history, 1):
+                st.markdown(f"**{idx}. Pregunta:** {entry['question']}")
+                st.code(entry['sql'], language="sql")
+                st.dataframe(entry['result'], use_container_width=True)
+                st.write("---")
+        if st.button("Borrar historial"):
+            st.session_state.history = []
+    
+    st.caption("Proyecto educativo — valida siempre el SQL generado antes de usarlo en producción.")
 if __name__ == "__main__":
     main()
