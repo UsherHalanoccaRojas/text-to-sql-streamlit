@@ -6,7 +6,7 @@ Aplicacion Streamlit que traduce preguntas en lenguaje natural a
 consultas SQL usando un modelo de Hugging Face (text-to-SQL), y las
 ejecuta contra una base de datos SQLite de ejemplo.
 
-Autor: <TU NOMBRE>
+Autor: Usher Halanocca Rojas
 Curso: Research Team Work N 01 - SQL AI Database Solutions
 """
 
